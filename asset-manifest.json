@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/meuphisto/static/css/main.ee6c9837.css",
-    "main.js": "/meuphisto/static/js/main.23ec04bf.js",
-    "index.html": "/meuphisto/index.html",
-    "main.ee6c9837.css.map": "/meuphisto/static/css/main.ee6c9837.css.map",
-    "main.23ec04bf.js.map": "/meuphisto/static/js/main.23ec04bf.js.map"
+    "main.css": "/Meuphisto/static/css/main.ee6c9837.css",
+    "main.js": "/Meuphisto/static/js/main.52de540a.js",
+    "index.html": "/Meuphisto/index.html",
+    "main.ee6c9837.css.map": "/Meuphisto/static/css/main.ee6c9837.css.map",
+    "main.52de540a.js.map": "/Meuphisto/static/js/main.52de540a.js.map"
   },
   "entrypoints": [
     "static/css/main.ee6c9837.css",
-    "static/js/main.23ec04bf.js"
+    "static/js/main.52de540a.js"
   ]
 }
