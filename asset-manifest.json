@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/meuphisto/static/css/main.ee6c9837.css",
+    "main.js": "/meuphisto/static/js/main.23ec04bf.js",
+    "index.html": "/meuphisto/index.html",
+    "main.ee6c9837.css.map": "/meuphisto/static/css/main.ee6c9837.css.map",
+    "main.23ec04bf.js.map": "/meuphisto/static/js/main.23ec04bf.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ee6c9837.css",
+    "static/js/main.23ec04bf.js"
+  ]
+}
