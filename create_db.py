@@ -1,5 +1,5 @@
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, Float, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Column, Integer, String, Boolean, Float, create_engine, text
 
 Base = declarative_base()
 
@@ -7,6 +7,7 @@ class Utterance(Base):
     __tablename__ = 'utterance'
 
     id = Column(Integer, primary_key=True)
+    dialogue_id = Column(String)
     agent_id = Column(String)
     text = Column(String)
     episode_done = Column(Boolean)
@@ -17,9 +18,8 @@ class Utterance(Base):
                             self.agent_id, self.text, self.timestamp)
 
 
-def main():
-    engine = create_engine("sqlite:///dialogues.db", echo=True, future=True)
+def create_db(path: str):
+    path = f"sqlite:///{path}/dialogues.db"
+    engine = create_engine(path, echo=True)
     Base.metadata.create_all(engine)
-
-if __name__ == "__main__":
-    main()
+    return path

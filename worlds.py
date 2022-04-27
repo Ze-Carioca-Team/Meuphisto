@@ -6,7 +6,9 @@
 from parlai.crowdsourcing.utils.worlds import CrowdOnboardWorld, CrowdTaskWorld  # type: ignore
 from parlai.core.worlds import validate  # type: ignore
 from joblib import Parallel, delayed  # type: ignore
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from create_db import Utterance
 
 
 class MultiAgentDialogOnboardWorld(CrowdOnboardWorld):
@@ -46,20 +48,18 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
         self.opt = opt
         self.agents[0].agent_id = "Cliente"
         self.agents[1].agent_id = "Atendente"
-        self.engine = create_engine("sqlite:///dialogues.db", echo=True)
-        self.dialogue_id = None
+        self.db_engine = create_engine(opt["db_path"])
+        self.dialogue_id = "TODO"
+        self.utterances = []
 
-    def commit(self, acts):
-        with self.engine.begin() as conn:
-            result = conn.execute(
-                text("""INSERT INTO utterance (
-                            text, dialogue_id, agent_id, episode_done, update_id, timestamp)
-                        VALUES (
-                            :text, :dialogue_id, :id, :episode_done, :update_id, :timestamp)
-                    """),
-                [acts]
-            )
-        return result
+    def push_to_db(self, acts):
+        utt = Utterance(*acts)
+        self.utterances.append(utt)
+
+    def commit(self):
+        session = Session(self.db_engine)
+        session.add_all(self.utterances)
+        session.commit()
 
     def parley(self):
         """
@@ -73,8 +73,7 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
             try:
                 acts[index] = agent.act(timeout=self.opt["turn_timeout"])
                 acts[index]["dialogue_id"] = self.dialogue_id
-                print(acts[index])
-                #self.commit(acts[index])
+                self.push_to_db(acts[index])
                 if self.send_task_data:
                     acts[index].force_set(
                         "task_data",
@@ -93,6 +92,7 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
                     other_agent.observe(validate(acts[index]))
         if self.current_turns >= self.max_turns:
             self.episodeDone = True
+            self.commit()
 
     def prep_save_data(self, agent):
         """Process and return any additional data from this world you may want to store"""

@@ -13,13 +13,13 @@ from mephisto.abstractions.blueprints.parlai_chat.parlai_chat_blueprint import (
     BLUEPRINT_TYPE_PARLAI_CHAT,
     SharedParlAITaskState,
 )
-
+from create_db import create_db
 from omegaconf import DictConfig
 from dataclasses import dataclass, field
 
 
 @dataclass
-class ParlAITaskConfig(build_default_task_config("example")):  # type: ignore
+class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
     num_turns: int = field(
         default=3,
         metadata={"help": "Number of turns before a conversation is complete"},
@@ -31,12 +31,21 @@ class ParlAITaskConfig(build_default_task_config("example")):  # type: ignore
             "a worker out, default 300 seconds"
         },
     )
+    db_path: str = field(
+        default="dialogue.db",
+        metadata={
+            "help": "Maximum response time before kicking "
+            "a worker out, default 300 seconds"
+        },
+    )
 
 
 @task_script(config=ParlAITaskConfig)
 def main(operator: "Operator", cfg: DictConfig) -> None:
+    db_path = create_db(cfg.task_dir)
 
-    world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout}
+    world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout,
+        "db_path": db_path}
 
     custom_bundle_path = cfg.mephisto.blueprint.get("custom_source_bundle", None)
     if custom_bundle_path is not None:
