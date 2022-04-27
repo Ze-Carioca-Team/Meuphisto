@@ -8,7 +8,7 @@ from parlai.core.worlds import validate  # type: ignore
 from joblib import Parallel, delayed  # type: ignore
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from create_db import Utterance
+from utils.create_db import Utterance
 
 
 class MultiAgentDialogOnboardWorld(CrowdOnboardWorld):
@@ -53,7 +53,11 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
         self.utterances = []
 
     def push_to_db(self, acts):
-        utt = Utterance(*acts)
+        acts["agent_id"] = acts["id"]
+        acts.pop("id", None)
+        acts.pop("task_data", None)
+        acts["turn"] = self.current_turns
+        utt = Utterance(**acts, dialogue_id=self.dialogue_id)
         self.utterances.append(utt)
 
     def commit(self):
@@ -68,23 +72,19 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
         Then take an action yourself.
         """
         acts = self.acts
-        self.current_turns += 1
         for index, agent in enumerate(self.agents):
-            try:
-                acts[index] = agent.act(timeout=self.opt["turn_timeout"])
-                acts[index]["dialogue_id"] = self.dialogue_id
-                self.push_to_db(acts[index])
-                if self.send_task_data:
-                    acts[index].force_set(
-                        "task_data",
-                        {
-                            "last_acting_agent": agent.agent_id,
-                            "current_dialogue_turn": self.current_turns,
-                            "utterance_count": self.current_turns + index,
-                        },
-                    )
-            except TypeError:
-                acts[index] = agent.act()  # not MTurkAgent
+            self.current_turns += 1
+            acts[index] = agent.act(timeout=self.opt["turn_timeout"])
+            self.push_to_db(acts[index].copy())
+            if self.send_task_data:
+                acts[index].force_set(
+                    "task_data",
+                    {
+                        "last_acting_agent": agent.agent_id,
+                        "current_dialogue_turn": self.current_turns,
+                        "utterance_count": self.current_turns + index,
+                    },
+                )
             if acts[index]["episode_done"]:
                 self.episodeDone = True
             for other_agent in self.agents:

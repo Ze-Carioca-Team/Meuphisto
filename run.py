@@ -13,7 +13,8 @@ from mephisto.abstractions.blueprints.parlai_chat.parlai_chat_blueprint import (
     BLUEPRINT_TYPE_PARLAI_CHAT,
     SharedParlAITaskState,
 )
-from create_db import create_db
+from utils.create_db import create_db
+from utils.gen_stories import populate_stories
 from omegaconf import DictConfig
 from dataclasses import dataclass, field
 
@@ -43,6 +44,7 @@ class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
 @task_script(config=ParlAITaskConfig)
 def main(operator: "Operator", cfg: DictConfig) -> None:
     db_path = create_db(cfg.task_dir)
+    populate_stories(db_path)
 
     world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout,
         "db_path": db_path}

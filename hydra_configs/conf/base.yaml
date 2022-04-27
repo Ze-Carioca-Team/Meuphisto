@@ -5,9 +5,10 @@ defaults:
   - /mephisto/provider: mock
 mephisto:
   blueprint:
-    world_file: ${task_dir}/worlds.py
+    world_file: ${task_dir}/utils/worlds.py
+    custom_source_bundle: ${task_dir}/webapp
     task_description_file: ${task_dir}/task_description.html
-    num_conversations: 1
+    num_conversations: 10
   task:
     # We expect to be able to handle 25 concurrent conversations without issue
     max_num_concurrent_units: 50 # 25 convos * 2 people per
