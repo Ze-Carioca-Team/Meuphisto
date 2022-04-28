@@ -239,7 +239,7 @@ def populate_stories(path: str, num_stories: int):
             client_talk = "\n".join(client_talk)
             system_talk = "\n".join(system_talk)
             hash = hashlib.blake2s()
-            hash.update((client_talk+system_talk).encode("utf8"))
+            hash.update((client_talk+system_talk).encode("utf-8"))
             session.add(Story(id=index, dialog_id=hash.hexdigest(), text_client=client_talk,
                                 text_system=system_talk))
     

@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 @dataclass
 class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
     num_turns: int = field(
-        default=2,
+        default=30,
         metadata={"help": "Number of turns before a conversation is complete"},
     )
     turn_timeout: int = field(

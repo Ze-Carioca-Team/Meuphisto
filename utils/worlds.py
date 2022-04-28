@@ -74,7 +74,7 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
             self.current_turns += 1
             acts[index] = agent.act(timeout=self.opt["turn_timeout"])
             if acts[index]["text"] == "!end":
-                acts[index]["episode_done"] = True
+                acts[index].force_set("episode_done", True)
             self.push_to_db(acts[index].copy())
             if self.send_task_data:
                 acts[index].force_set(
