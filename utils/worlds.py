@@ -6,9 +6,6 @@
 from parlai.crowdsourcing.utils.worlds import CrowdOnboardWorld, CrowdTaskWorld  # type: ignore
 from parlai.core.worlds import validate  # type: ignore
 from joblib import Parallel, delayed  # type: ignore
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from utils.create_db import Utterance
 
 
 class MultiAgentDialogOnboardWorld(CrowdOnboardWorld):
@@ -48,22 +45,14 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
         self.opt = opt
         self.agents[0].agent_id = "Cliente"
         self.agents[1].agent_id = "Atendente"
-        self.db_engine = create_engine(opt["db_path"])
-        self.dialogue_id = "TODO"
+        self.dialogue_data = shared.shared
         self.utterances = []
 
     def push_to_db(self, acts):
-        acts["agent_id"] = acts["id"]
-        acts.pop("id", None)
-        acts.pop("task_data", None)
-        acts["turn"] = self.current_turns
-        utt = Utterance(**acts, dialogue_id=self.dialogue_id)
-        self.utterances.append(utt)
-
-    def commit(self):
-        session = Session(self.db_engine)
-        session.add_all(self.utterances)
-        session.commit()
+        # acts.pop("id", None)
+        # acts.pop("task_data", None)
+        # acts.pop("timestamp", None)
+        self.utterances.append(acts)
 
     def parley(self):
         """
@@ -71,6 +60,15 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
         took.
         Then take an action yourself.
         """
+        if self.current_turns == 0:
+            self.agents[0].observe({
+                 "id": "História",
+                 "text": "\n".join(self.dialogue_data["client"])
+            })
+            self.agents[1].observe({
+                 "id": "História",
+                 "text": "\n".join(self.dialogue_data["system"])
+            })
         acts = self.acts
         for index, agent in enumerate(self.agents):
             self.current_turns += 1
@@ -92,11 +90,11 @@ class MultiAgentDialogWorld(CrowdTaskWorld):
                     other_agent.observe(validate(acts[index]))
         if self.current_turns >= self.max_turns:
             self.episodeDone = True
-            self.commit()
 
     def prep_save_data(self, agent):
         """Process and return any additional data from this world you may want to store"""
-        return {"example_key": "example_value"}
+        print("A conversation has finished! Saving data...")
+        return self.utterances
 
     def episode_done(self):
         return self.episodeDone
@@ -129,8 +127,8 @@ def validate_onboarding(data):
     return True
 
 
-def make_world(opt, agents):
-    return MultiAgentDialogWorld(opt, agents)
+def make_world(opt, agents, initialization_data):
+    return MultiAgentDialogWorld(opt, agents, initialization_data)
 
 
 def get_world_params():

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 
-import markov_chain
+from utils import markov_chain
 import numpy as np
 import hashlib
 import random
+import json
 import string
-from create_db import Story
+from utils.schema import Story
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -216,10 +217,10 @@ def states_to_dialogue(states):
     
     return talk, cliente_talk, sistema_talk
 
-def populate_stories(path_db: str):
+def populate_stories(path: str, num_stories: int):
     steps_lens = []
     steps = []
-    for i in range(200):
+    for i in range(num_stories):
         flow = create(atual="A", end="X")
         steps_lens.append(len(flow))
         steps.append(flow)
@@ -228,19 +229,18 @@ def populate_stories(path_db: str):
     "Média", sum(steps_lens)/len(steps_lens), "<20", len([f for f in steps_lens if f<20]),
     ">40", len([f for f in steps_lens if f>40]))
 
-    engine = create_engine(path_db)
+    engine = create_engine(path)
     session = Session(engine)
-    
-    for st in steps:
-        _, cliente_talk, sistema_talk = states_to_dialogue(st)
-        text = "\n".join(cliente_talk+sistema_talk)
-        hash = hashlib.blake2s()
-        hash.update(text.encode("utf8"))
-        session.add(Story(dialog_id=hash.hexdigest(), text=text))
+    with open("dialogues.jsonl", "w") as fout:
+        for index, st in enumerate(steps):
+            _, client_talk, system_talk = states_to_dialogue(st)
+            fout.write(json.dumps({"id":index, "client":client_talk, "system":system_talk}))
+            fout.write("\n")
+            client_talk = "\n".join(client_talk)
+            system_talk = "\n".join(system_talk)
+            hash = hashlib.blake2s()
+            hash.update((client_talk+system_talk).encode("utf8"))
+            session.add(Story(id=index, dialog_id=hash.hexdigest(), text_client=client_talk,
+                                text_system=system_talk))
     
     session.commit()
-
-# if __name__ == "__main__":
-#     import create_db
-#     path = create_db.create_db(".")
-#     populate_stories(path)
