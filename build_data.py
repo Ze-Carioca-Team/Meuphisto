@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from utils.gen_stories import populate_stories
 from utils.schema import Base, Story
-from mephisto.abstractions.databases.local_database import LocalMephistoDB
 import argparse
 
 def main():
@@ -12,8 +11,7 @@ def main():
                         help='name to save database.')
 
     args = parser.parse_args()
-    db = LocalMephistoDB()
-    path = "sqlite:///"+db.db_path
+    path = "sqlite:///"+args.name
     engine = create_engine(path, echo=True)
     Base.metadata.drop_all(bind=engine, tables=[Story.__table__])
     Base.metadata.create_all(engine)
