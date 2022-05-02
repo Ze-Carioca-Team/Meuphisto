@@ -7,7 +7,6 @@ mephisto:
   blueprint:
     world_file: ${task_dir}/utils/worlds.py
     # custom_source_bundle: ${task_dir}/webapp
-    task_description_file: ${task_dir}/task_description.html
     context_jsonl: ${task_dir}/dialogues.jsonl
   task:
     # We expect to be able to handle 25 concurrent conversations without issue

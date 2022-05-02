@@ -49,7 +49,9 @@ def main(operator: "Operator", cfg: DictConfig) -> None:
     shared_state = SharedParlAITaskState(
         world_opt=world_opt, onboarding_world_opt=world_opt
     )
-    
+    print("HEYYYYYYYYYYYYYYYYYYYY")
+    # with open("ids.csv", "w") as ids_file:
+    #     ids_file.write("\n")
     operator.launch_task_run(cfg.mephisto, shared_state)
     operator.wait_for_runs_then_shutdown(skip_input=True, log_rate=30)
 
