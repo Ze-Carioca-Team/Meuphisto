@@ -1,3 +1,4 @@
 mephisto==1.0.1
 parlai==1.6.0
 sqlalchemy==1.4.0
+argparse==1.4.0

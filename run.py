@@ -4,8 +4,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-
 import os
+import time
+from threading import Timer
+import argparse
+
 from mephisto.operations.operator import Operator
 from mephisto.tools.scripts import task_script, load_db_and_process_config
 from mephisto.operations.hydra_config import build_default_task_config
@@ -17,6 +20,23 @@ from mephisto.abstractions.blueprints.parlai_chat.parlai_chat_blueprint import (
 from omegaconf import DictConfig
 from dataclasses import dataclass, field
 
+def parse_args ():
+    parser = argparse.ArgumentParser(description="Backend execution of Meuphisto tool")
+    parser.add_argument("--localtunnel", type=str, default=False, help="Enable use of tunneling by LocalTunnel.")
+    parser.add_argument("--port", type=str, default="1234", help="Indication of the tool's execution port on the server.")
+    return parser.parse_args()
+
+def run_lt(port):
+    if os.path.isfile('/usr/local/bin/lt'):
+        print("localtunnel is alreadty installed.")
+    else:
+        os.system('npm install -g localtunnel')
+    output = os.system(f'lt -p {port}')
+    return output
+
+def start_lt(port):
+    lt_adress = run_lt(port)
+    print(lt_adress)
 
 @dataclass
 class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
@@ -34,7 +54,7 @@ class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
 
 
 @task_script(config=ParlAITaskConfig)
-def main(operator: "Operator", cfg: DictConfig) -> None:
+def main(pargs, operator: "Operator", cfg: DictConfig) -> None:
 
     world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout}
 
@@ -49,10 +69,17 @@ def main(operator: "Operator", cfg: DictConfig) -> None:
     shared_state = SharedParlAITaskState(
         world_opt=world_opt, onboarding_world_opt=world_opt
     )
-    
+
+    cfg['mephisto']['architect']['port'] = args.port
     operator.launch_task_run(cfg.mephisto, shared_state)
+
+    if (str(args.localtunnel).lower() == "true"):
+        thread = Timer(1, start_lt, args=(cfg['mephisto']['architect']['port'],))
+        thread.setDaemon(True)
+        thread.start()
+
     operator.wait_for_runs_then_shutdown(skip_input=True, log_rate=30)
 
-
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args)
