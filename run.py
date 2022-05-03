@@ -6,8 +6,8 @@
 
 import os
 import time
+import json
 from threading import Timer
-import argparse
 
 from mephisto.operations.operator import Operator
 from mephisto.tools.scripts import task_script, load_db_and_process_config
@@ -19,14 +19,6 @@ from mephisto.abstractions.blueprints.parlai_chat.parlai_chat_blueprint import (
 
 from omegaconf import DictConfig
 from dataclasses import dataclass, field
-
-argp = None
-
-def parse_args ():
-    parser = argparse.ArgumentParser(description="Backend execution of Meuphisto tool")
-    parser.add_argument("--localtunnel", type=str, default=False, help="Enable use of tunneling by LocalTunnel.")
-    parser.add_argument("--port", type=str, default="1234", help="Indication of the tool's execution port on the server.")
-    return parser.parse_args()
 
 def run_lt(port):
     if os.path.isfile('/usr/local/bin/lt'):
@@ -57,7 +49,9 @@ class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
 
 @task_script(config=ParlAITaskConfig)
 def main(operator: "Operator", cfg: DictConfig) -> None:
-    global argp
+    config = None
+    with open("config.json") as config_file:
+        config = json.load(config_file)
 
     world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout}
     custom_bundle_path = cfg.mephisto.blueprint.get("custom_source_bundle", None)
@@ -72,10 +66,10 @@ def main(operator: "Operator", cfg: DictConfig) -> None:
         world_opt=world_opt, onboarding_world_opt=world_opt
     )
 
-    cfg['mephisto']['architect']['port'] = argp.port
+    cfg['mephisto']['architect']['port'] = config["port"]
     operator.launch_task_run(cfg.mephisto, shared_state)
 
-    if (str(argp.localtunnel).lower() == "true"):
+    if (config["localtunnel"]):
         thread = Timer(1, start_lt, args=(cfg['mephisto']['architect']['port'],))
         thread.setDaemon(True)
         thread.start()
@@ -83,5 +77,4 @@ def main(operator: "Operator", cfg: DictConfig) -> None:
     operator.wait_for_runs_then_shutdown(skip_input=True, log_rate=30)
 
 if __name__ == "__main__":
-    argp = parse_args()
     main()
