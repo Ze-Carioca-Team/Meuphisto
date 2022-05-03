@@ -20,6 +20,8 @@ from mephisto.abstractions.blueprints.parlai_chat.parlai_chat_blueprint import (
 from omegaconf import DictConfig
 from dataclasses import dataclass, field
 
+argp = None
+
 def parse_args ():
     parser = argparse.ArgumentParser(description="Backend execution of Meuphisto tool")
     parser.add_argument("--localtunnel", type=str, default=False, help="Enable use of tunneling by LocalTunnel.")
@@ -54,10 +56,10 @@ class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
 
 
 @task_script(config=ParlAITaskConfig)
-def main(pargs, operator: "Operator", cfg: DictConfig) -> None:
+def main(operator: "Operator", cfg: DictConfig) -> None:
+    global argp
 
     world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout}
-
     custom_bundle_path = cfg.mephisto.blueprint.get("custom_source_bundle", None)
     if custom_bundle_path is not None:
         assert os.path.exists(custom_bundle_path), (
@@ -70,10 +72,10 @@ def main(pargs, operator: "Operator", cfg: DictConfig) -> None:
         world_opt=world_opt, onboarding_world_opt=world_opt
     )
 
-    cfg['mephisto']['architect']['port'] = args.port
+    cfg['mephisto']['architect']['port'] = argp.port
     operator.launch_task_run(cfg.mephisto, shared_state)
 
-    if (str(args.localtunnel).lower() == "true"):
+    if (str(argp.localtunnel).lower() == "true"):
         thread = Timer(1, start_lt, args=(cfg['mephisto']['architect']['port'],))
         thread.setDaemon(True)
         thread.start()
@@ -81,5 +83,5 @@ def main(pargs, operator: "Operator", cfg: DictConfig) -> None:
     operator.wait_for_runs_then_shutdown(skip_input=True, log_rate=30)
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(args)
+    argp = parse_args()
+    main()
