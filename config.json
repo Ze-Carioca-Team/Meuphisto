@@ -1,4 +1,4 @@
-{// Backend execution of Meuphisto tool
-	"localtunnel": true,// Enable use of tunneling by LocalTunnel.
-	"port": "1234"//Indication of the tool's execution port on the server.
+{
+	"localtunnel": true,
+	"port": "1234"
 }

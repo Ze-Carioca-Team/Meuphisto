@@ -50,7 +50,8 @@ class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
 @task_script(config=ParlAITaskConfig)
 def main(operator: "Operator", cfg: DictConfig) -> None:
     config = None
-    with open("config.json") as config_file:
+    fold = __file__.replace(os.path.basename(__file__), "")
+    with open(fold+"config.json", encoding='utf-8') as config_file:
         config = json.load(config_file)
 
     world_opt = {"num_turns": cfg.num_turns, "turn_timeout": cfg.turn_timeout}
