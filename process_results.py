@@ -29,9 +29,10 @@ def format_for_printing_data(data):
     output_string += f"\nStory Id: {story['id']}"
     output_string += f"\nStory:\n{data['data']['messages'][1]['text']}"
     output_string += f"\nMessages:\n"
-    for msg in data["data"]["save_data"]:
-        if "text" in msg and msg["id"] == role:
-            output_string += f" * {msg['text']}\n"
+    if data["data"]["save_data"]:
+        for msg in data["data"]["save_data"]:
+            if "text" in msg and msg["id"] == role:
+                output_string += f" * {msg['text']}\n"
     output_string += "=" * 80
     return output_string
 
