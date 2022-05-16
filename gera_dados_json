@@ -1,0 +1,10 @@
+import json
+
+with open('.\dialogues.jsonl', 'r') as json_file:
+    json_file = list(json_file)
+    for file in json_file:
+        print('\n'*3, file)
+
+with open('dialogues.json', 'w') as fp:
+    json.dump(json_file, fp)
+
