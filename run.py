@@ -39,7 +39,7 @@ class ParlAITaskConfig(build_default_task_config("base")):  # type: ignore
         metadata={"help": "Number of turns before a conversation is complete"},
     )
     turn_timeout: int = field(
-        default=300,
+        default=1200,
         metadata={
             "help": "Maximum response time before kicking "
             "a worker out, default 300 seconds"
